@@ -69,31 +69,64 @@ export async function POST(req: Request) {
       };
     });
 
-    const { error } = await supabase.from('orders').insert([
-      {
-        user_id: user?.id,
-        user_email,
-        user_name,
-        phone,
-        items: enrichedItems,
-        total_amount,
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        location,
-        address,
-        city,
-        state,
-        zip,
-        status: 'paid',
-      },
-    ]);
+    // Insert into orders and get the inserted row (with order ID)
+    const { data: orderInsert, error: orderError } = await supabase
+      .from('orders')
+      .insert([
+        {
+          user_id: user?.id,
+          user_email,
+          user_name,
+          phone,
+          items: enrichedItems,
+          total_amount,
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature,
+          location,
+          address,
+          city,
+          state,
+          zip,
+          status: 'paid',
+        },
+      ])
+      .select()
+      .single();
 
-    if (error) {
-      return new Response(JSON.stringify({ error }), { status: 500 });
+    if (orderError) {
+      return new Response(JSON.stringify({ error: orderError }), { status: 500 });
     }
 
-    // ✅ Clear user's cart after successful order
+    const orderId = orderInsert.id;
+
+    const deliveries = enrichedItems.map((item: any) => {
+      const subscription =
+        typeof item.subscription === 'string'
+          ? JSON.parse(item.subscription)
+          : item.subscription;
+
+      return {
+        product_id: item.product_id,
+        user_id: user?.id,
+        order_id: orderId,
+        status: 'pending',
+        from_date: subscription.from,
+        to_date: subscription.to,
+        quantity: item.quantity,
+        deliverystatus: item.delivery_status, // ✅ This is now stored in delivery table
+      };
+    });
+
+    const { error: deliveryError } = await supabase
+      .from('delivery')
+      .insert(deliveries);
+
+    if (deliveryError) {
+      console.error('Delivery insert error:', deliveryError);
+      return new Response(JSON.stringify({ error: deliveryError }), { status: 500 });
+    }
+
     await supabase.from('cart').delete().eq('user_id', user?.id);
 
     await resend.emails.send({

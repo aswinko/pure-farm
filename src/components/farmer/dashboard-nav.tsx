@@ -17,14 +17,14 @@ const farmerNavItems = [
     icon: Package,
   },
   {
+    title: "Payments",
+    href: "/dashboard/payments",
+    icon: BarChart3,
+  },
+  {
     title: "Orders",
     href: "/dashboard/orders",
     icon: ShoppingBasket,
-  },
-  {
-    title: "Analytics",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
   },
 ]
 
@@ -39,11 +39,11 @@ const supplierNavItems = [
     href: "/dashboard/deliveries",
     icon: Truck,
   },
-  {
-    title: "Analytics",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
-  },
+  // {
+  //   title: "Analytics",
+  //   href: "/dashboard/analytics",
+  //   icon: BarChart3,
+  // },
 ]
 
 const customerNavItems = [
@@ -94,6 +94,11 @@ const adminNavItems = [
     title: "Category",
     href: "/dashboard/category",
     icon: BarChart3,
+  },
+  {
+    title: "Orders",
+    href: "/dashboard/orders",
+    icon: ShoppingBasket,
   },
   // {
   //   title: "Orders",

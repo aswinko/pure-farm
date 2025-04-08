@@ -40,7 +40,7 @@ export const ProductSlider: React.FC<ProductSliderProps> = ({products}) => {
                   {/* Product Name */}
                   <h3 className="text-lg font-medium text-center">{product.name}</h3>
                   {/* Price */}
-                  <p className="text-sm text-gray-600 mt-1">${product.price}</p>
+                  <p className="text-sm text-gray-600 mt-1">₹{product.price}</p>
                   {/* Add to Cart Button */}
                   <Button variant="default" className="mt-3 w-full">
                     Add to Cart

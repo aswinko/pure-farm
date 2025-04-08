@@ -1,6 +1,6 @@
 import type React from "react"
 import Link from "next/link"
-import { Bell, ChevronDown, Leaf, LogOut, Menu, Settings, ShoppingCart, User } from "lucide-react"
+import { Bell, ChevronDown, Leaf, LogOut, Menu, Settings, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -57,14 +57,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <span>PureFarm Market</span>
           </Link>
           <div className="ml-auto flex items-center gap-2">
-            {/* {user.role === "customer" && ( */}
-              <Link href="/dashboard/cart">
-                <Button variant="outline" size="icon">
-                  <ShoppingCart className="h-5 w-5" />
-                  <span className="sr-only">View cart</span>
-                </Button>
-              </Link>
-            {/* )} */}
+
             <Button variant="outline" size="icon">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Toggle notifications</span>

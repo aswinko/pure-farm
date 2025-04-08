@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { getCurrentUser } from "@/app/actions/auth-actions";
 
 interface Product {
   id: string;
@@ -32,7 +33,10 @@ export default function ProductList({ refresh }: { refresh: boolean }) {
   }, [refresh]);
 
   async function fetchProducts() {
-    const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    const user = await getCurrentUser()
+    const { data, error } = await supabase.from("products").select("*").eq("user_id", user?.user_id).order("created_at", { ascending: false });
+    console.log(data);
+    
     if (error) console.error("Error fetching products:", error.message);
     else setProducts(data || []);
   }

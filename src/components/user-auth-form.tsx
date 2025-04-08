@@ -50,7 +50,7 @@ export function UserAuthForm() {
       if (data.role === "farmer") {
         redirect("/dashboard");
       } else if (data.role === "supplier") {
-        redirect("/supplier");
+        redirect("/dashboard");
       } else if (data.role === "user") {
         redirect("/");
       } else {

@@ -330,12 +330,12 @@ useEffect(() => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Tax</span>
-                    <span>₹{(cartTotal * 0.08).toFixed(2)}</span>
+                    <span>₹{0}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-medium">
                     <span>Total</span>
-                    <span>₹{(cartTotal * 1.08).toFixed(2)}</span>
+                    <span>₹{cartTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>

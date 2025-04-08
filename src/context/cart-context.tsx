@@ -19,6 +19,7 @@ export type CartItem = {
   image: string
   quantity: number
   subscription?: SubscriptionDetails
+  product_id: string
 }
 
 type CartContextType = {

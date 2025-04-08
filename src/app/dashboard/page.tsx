@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { redirect } from "next/navigation"
 import { getUserRole } from "../actions/auth-actions"
 import { createClient } from "@/lib/supabase/server"
+import { getAllDeliveries, getTotalOrderAmount } from "../actions/order-actions"
 
 export default async function DashboardPage() {
   // This is a demo dashboard that shows different content based on user role
@@ -20,12 +21,15 @@ export default async function DashboardPage() {
   }
 
     // 🔹 Redirect if the user is not a farmer
-    if (userRole !== "farmer" && userRole != "admin") {
+    if (userRole !== "farmer" && userRole != "admin" && userRole != "supplier") {
       redirect("/"); // 🔹 Redirect to unauthorized page
     }
 
+    const deliveries = await getAllDeliveries();
 
 
+    console.log(deliveries);
+    
 
   return (
     <div className="flex flex-col gap-4 p-4 md:gap-8 md:p-8">
@@ -36,7 +40,7 @@ export default async function DashboardPage() {
             <ShoppingBasket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{deliveries?.data?.length}</div>
             <p className="text-xs text-muted-foreground">+2 from last month</p>
           </CardContent>
         </Card>
@@ -46,7 +50,7 @@ export default async function DashboardPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{deliveries?.data?.length}</div>
             <p className="text-xs text-muted-foreground">+1 from last month</p>
           </CardContent>
         </Card>
@@ -77,73 +81,41 @@ export default async function DashboardPage() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$249.45</div>
-            <p className="text-xs text-muted-foreground">+$24.20 from last month</p>
+            <div className="text-2xl font-bold">₹{await getTotalOrderAmount()}</div>
+            <p className="text-xs text-muted-foreground">+₹24.20 from last month</p>
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-7">
+        <Card className="lg:col-span-8">
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
             <CardDescription>You have 3 orders scheduled for delivery this week.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="grid grid-cols-4 gap-4 rounded-lg border p-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Order #1234</p>
-                  <p className="text-sm text-muted-foreground">March 14, 2023</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Status</p>
-                  <p className="text-sm text-muted-foreground">Processing</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Items</p>
-                  <p className="text-sm text-muted-foreground">5 items</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Total</p>
-                  <p className="text-sm text-muted-foreground">$45.00</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 gap-4 rounded-lg border p-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Order #1233</p>
-                  <p className="text-sm text-muted-foreground">March 12, 2023</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Status</p>
-                  <p className="text-sm text-muted-foreground">Delivered</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Items</p>
-                  <p className="text-sm text-muted-foreground">3 items</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Total</p>
-                  <p className="text-sm text-muted-foreground">$27.50</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 gap-4 rounded-lg border p-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Order #1232</p>
-                  <p className="text-sm text-muted-foreground">March 10, 2023</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Status</p>
-                  <p className="text-sm text-muted-foreground">Delivered</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Items</p>
-                  <p className="text-sm text-muted-foreground">7 items</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Total</p>
-                  <p className="text-sm text-muted-foreground">$52.25</p>
-                </div>
-              </div>
+                {
+                  deliveries.data?.map((data, index)=> (
+                    <div key={index} className="grid grid-cols-4 gap-4 rounded-lg border p-4">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Order Id</p>
+                        <p className="text-sm text-muted-foreground">{data.id}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Product</p>
+                        <p className="text-sm text-muted-foreground">{data.product}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Days</p>
+                        <p className="text-sm text-muted-foreground">{data.deliverystatus?.length} Days</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Status</p>
+                        <p className="text-sm text-muted-foreground">{data.status}</p>
+                      </div>
+                    </div>
+                  ))
+                }
             </div>
           </CardContent>
           <CardFooter>
@@ -155,7 +127,7 @@ export default async function DashboardPage() {
             </Button>
           </CardFooter>
         </Card>
-        <Card className="lg:col-span-3">
+        {/* <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Active Subscriptions</CardTitle>
             <CardDescription>Your recurring deliveries</CardDescription>
@@ -202,7 +174,7 @@ export default async function DashboardPage() {
               </Link>
             </Button>
           </CardFooter>
-        </Card>
+        </Card> */}
       </div>
     </div>
   )
