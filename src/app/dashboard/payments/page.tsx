@@ -27,7 +27,7 @@ export default function OrdersPage() {
     // Replace with actual API call
     const fetchOrders = async () => {
         const data = await getAllOrder()
-        setOrders(data);
+        setOrders(data || []);
     };
 
     fetchOrders();
