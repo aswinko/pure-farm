@@ -1,11 +1,14 @@
-import React from 'react'
+import Navbar from "@/components/layout/Navbar";
+import CartPageClient from "./CartPageClient";
 
-const Cart = () => {
+
+export default function CartPage() {
+  
+
   return (
-    <div>
-      cart
-    </div>
+    <>
+      <Navbar />
+      <CartPageClient />
+    </>
   )
 }
-
-export default Cart

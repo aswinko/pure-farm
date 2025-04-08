@@ -64,6 +64,7 @@ export async function addProduct({
   image,
   category_id, // Should be a UUID
   quantity,
+  features,
 
 }: Product ): Promise<ProductResponse> {
   const supabase = await createClient();
@@ -77,7 +78,8 @@ export async function addProduct({
       description,
       image: image || null, // Store image URL
       category_id: category_id || null, // Ensure category_id is set properly
-      quantity
+      quantity,
+      features,
     },
   ]);
 
@@ -93,7 +95,7 @@ export async function getAllProducts() {
 
   const { data, error } = await supabase
     .from("products") // ✅ Ensure the correct table name
-    .select("id, user_id, name, price, description, quantity, category_id, image, created_at") // ✅ Fetch only required fields
+    .select("id, user_id, name, price, description, quantity, category_id, image, features, unit, created_at") // ✅ Fetch only required fields
     .order("created_at", { ascending: false }); // ✅ Sort by latest products first
 
   if (error) {
@@ -163,7 +165,7 @@ export async function getProductById(productId: string): Promise<Product | null>
 
   const { data, error } = await supabase
     .from("products")
-    .select("id, name, price, image, description, quantity, category_id")
+    .select("id, name, price, image, description, quantity, unit, category_id, features")
     .eq("id", productId)
     .single();
 
@@ -173,4 +175,44 @@ export async function getProductById(productId: string): Promise<Product | null>
   }
 
   return data as Product;
+}
+
+export async function getRelatedProducts(id: string) {
+  const supabase = await createClient();
+
+  // Fetch the event
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !product) return null;
+
+  // Fetch related events (same category, exclude current event)
+  const { data: relatedProducts } = await supabase
+    .from("products")
+    .select("id, name, price, image")
+    .eq("category_id", product.category_id)
+    .neq("id", id) // Exclude current event
+    .limit(4); // Get only 4 related events
+
+  return { ...product, relatedProducts: relatedProducts || [] };
+}
+
+export async function getAllProductsExceptCurrentUser(userId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, user_id, name, price, description, category_id, image, features, unit, created_at")
+    .neq("user_id", userId) // ✅ Exclude current user's events
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching prducts:", error.message);
+    return [];
+  }
+
+  return data;
 }

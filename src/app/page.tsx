@@ -6,10 +6,15 @@ import { ImageCarousel } from "@/components/layout/ImageCarousel"
 import Navbar from "@/components/layout/Navbar"
 import { getAllCategories, getAllProducts } from "./actions/product-actions"
 import AllProductCategory from "@/components/customer/allproduct-category"
+import { createClient } from "@/lib/supabase/server"
 // import AllProductCategory from "@/components/user/all-product-category"
 
 export default async function Home() {
   const products = await getAllProducts();
+
+  const supabase = await createClient()
+
+  const { data } = await supabase.auth.getUser()
   
    // Fetch categories and create a mapping { category_id: category_name }
    const categories = await getAllCategories();
@@ -176,31 +181,38 @@ export default async function Home() {
               </div>
             </div>
           </section>
-          <section className=" w-full py-12 md:py-24 lg:py-32 bg-green-600 text-white">
-            <div className="container mx-auto px-4 md:px-6">
-              <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Join PureFarm Market Today</h2>
-                  <p className="max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                    Whether you re a farmer, supplier, or customer, PureFarm Market has everything you need for a seamless
-                    farm-to-table experience.
-                  </p>
+          {
+            !data ? (
+              <section className=" w-full py-12 md:py-24 lg:py-32 bg-green-600 text-white">
+                <div className="container mx-auto px-4 md:px-6">
+                  <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Join PureFarm Market Today</h2>
+                      <p className="max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                        Whether you re a farmer, supplier, or customer, PureFarm Market has everything you need for a seamless
+                        farm-to-table experience.
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                      <Link href="/register">
+                        <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100">
+                          Sign Up Now
+                        </Button>
+                      </Link>
+                      <Link href="/login">
+                        <Button size="lg" variant="outline" className="border-white bg-inset text-white hover:text-white hover:bg-green-600">
+                          Log In
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Link href="/register">
-                    <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100">
-                      Sign Up Now
-                    </Button>
-                  </Link>
-                  <Link href="/login">
-                    <Button size="lg" variant="outline" className="border-white bg-inset text-white hover:text-white hover:bg-green-600">
-                      Log In
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
+              </section>
+            ) : (
+              ""
+            )
+          }
+          
         </main>
         <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full border-t px-4 md:px-6">
           <div className="flex items-center gap-2">

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 // import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { CartProvider } from "@/context/cart-context";
+import Script from "next/script";
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
 //   subsets: ["latin"],
@@ -27,7 +29,13 @@ export default async function RootLayout({
       <body
         className={`antialiased` }
       >
-        {children}
+        <CartProvider>
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="beforeInteractive"
+        />
+          {children}
+          </CartProvider>
         <Toaster richColors />
       </body>
     </html>

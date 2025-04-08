@@ -19,6 +19,7 @@ const productSchema = z.object({
   price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price"),
   description: z.string().min(15, "Description must be at least 15  characters"),
   categoryId: z.string().min(1, "Please select a category"), // 🔹 Category validation
+  features: z.array(z.string().min(2, "Each feature must have at least 2 characters.")).min(1, "At least one feature is required."),
   quantity: z
   .string()
   .regex(/^\d+$/, "Quantity must be a valid number")
@@ -37,6 +38,8 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [ , setCategoryLoading] = useState(true);
+  const [features, setFeatures] = useState<string[]>([]);
+  const [featureInput, setFeatureInput] = useState("");
 
 
   const {
@@ -47,6 +50,7 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
     formState: { errors },
   } = useForm({
     resolver: zodResolver(productSchema),
+    defaultValues: { features: [] }, // ✅ Ensure features field is initialized
   });
 
 
@@ -68,6 +72,21 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
     fetchCategories();
   }, []);
 
+
+  const handleAddFeature = () => {
+    if (featureInput.trim().length > 1) {
+      const updatedFeatures = [...features, featureInput.trim()];
+      setFeatures(updatedFeatures);
+      setValue("features", updatedFeatures); // ✅ Sync with react-hook-form
+      setFeatureInput("");
+    }
+  };
+  
+  const handleRemoveFeature = (index: number) => {
+    const updatedFeatures = features.filter((_, i) => i !== index);
+    setFeatures(updatedFeatures);
+    setValue("features", updatedFeatures); // ✅ Sync with react-hook-form
+  };
 
   // 🔹 Handle form submission
   async function onSubmit(data: z.infer<typeof productSchema>) {
@@ -105,6 +124,7 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
       description: data.description,
       category_id: data.categoryId, // 🔹 Include selected category
       quantity: data.quantity, // ✅ Include quantity
+      features,
       image: imageUrl || undefined,
     });
 
@@ -158,6 +178,30 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
           </Select>
           {errors.categoryId && <p className="text-red-500 text-sm">{errors.categoryId.message}</p>}
         </div>
+        
+        {/* Event Features */}
+        <div className="mb-4">
+            <Label>Event Highlights</Label>
+            <div className="flex gap-2">
+              <Input value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} placeholder="Add a feature" />
+              <Button type="button" onClick={handleAddFeature}>
+                Add
+              </Button>
+            </div>
+            {features.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {features.map((feature, index) => (
+                  <li key={index} className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                    {feature}
+                    <Button variant="ghost" size="sm" onClick={() => handleRemoveFeature(index)}>
+                      ✕
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {errors.features && <p className="text-red-500 text-sm">{errors.features.message as string}</p>}
+          </div>
 
          {/* ✅ Quantity Input */}
          <div className="mb-4">

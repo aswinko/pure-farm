@@ -19,3 +19,8 @@ CREATE TABLE categories (
     name TEXT UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE products 
+ADD COLUMN features TEXT NULL;
+ALTER TABLE products
+ALTER COLUMN features TYPE TEXT[] USING string_to_array(features, ',');

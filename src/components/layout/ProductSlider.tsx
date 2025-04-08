@@ -29,13 +29,12 @@ export const ProductSlider: React.FC<ProductSliderProps> = ({products}) => {
               <Card className="rounded-lg overflow-hidden shadow-lg">
                 <CardContent className="flex flex-col items-center justify-center p-4">
                   {/* Product Image */}
-                  <div className="relative w-32 h-32 mb-2">
+                  <div className="relative w-full h-32 mb-2">
                     <Image
-                      src={product.image}
+                      fill
+                      src={product.image || ''}
                       alt={product.name}
-                      layout="fill"
-                      objectFit="contain"
-                      className="rounded-lg"
+                      className="rounded-lg object-contain w-full h-full"
                     />
                   </div>
                   {/* Product Name */}
