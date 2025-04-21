@@ -22,138 +22,182 @@ export interface User {
 }
 
 export async function signup(formData: FormData): Promise<AuthResponse> {
-    const supabase = await createClient();
-  
-    // Extract form fields
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const firstName = formData.get("firstName") as string;
-    const lastName = formData.get("lastName") as string;
-    const phone = formData.get("phone") as string;
-    // const role = formData.get("user-type") as string;
-    const farmName = formData.get("farmName") as string | null;
-    const companyName = formData.get("companyName") as string | null;
-    const address = formData.get("address") as string | null;
-    const userType = formData.get("userType") as string;    
-    
-    // 🔹 Check if the email already exists in `user_profiles`
-    const { data: existingUser, error: checkError } = await supabase
+  const supabase = await createClient();
+
+  // Extract form fields
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+  const phone = formData.get("phone") as string;
+  // const role = formData.get("user-type") as string;
+  const farmName = formData.get("farmName") as string | null;
+  const companyName = formData.get("companyName") as string | null;
+  const address = formData.get("address") as string | null;
+  const userType = formData.get("userType") as string;
+
+  // 🔹 Check if the email already exists in `user_profiles`
+  const { data: existingUser, error: checkError } = await supabase
     .from("user_profiles")
     .select("user_id")
     .eq("email", email)
     .maybeSingle();
 
-    if (checkError) {
-    return { error: "Database error while checking email!", success: false, data: null };
-    }
-
-    if (existingUser) {
-    return { error: "Email is already registered!", success: false, data: null };
-    }
-  
-    // Sign up user in Supabase Auth
-    const { data: signupData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: `${firstName} ${lastName}` } },
-    });
-  
-    if (authError) {
-      return { error: authError.message, success: false, data: null };
-    }
-  
-    const userId = signupData?.user?.id;
-    if (!userId) {
-      return { error: "User ID not found!", success: false, data: null };
-    }
-  
-    console.log("User created in auth, inserting into user_profiles...");
-  
-    // Insert user details in `user_profiles`
-    const { error: profileError } = await supabase.from("user_profiles").insert([
-      {
-        user_id: userId,
-        first_name: firstName,
-        last_name: lastName,
-        phone,
-        farm_name: userType === "farmer" ? farmName : null,
-        company_name: userType === "supplier" ? companyName : null,
-        address,
-        email,
-      },
-    ]);
-  
-    if (profileError) {
-      console.error("Error inserting into user_profiles:", profileError.message);
-      return { error: "Failed to store user profile", success: false, data: null };
-    }
-  
-    console.log("User profile stored successfully, inserting into user_roles...");
-  
-    // Insert user role in `user_roles`
-    const { error: roleError } = await supabase.from("user_roles").insert([
-      { user_id: userId, role: userType },
-    ]);
-  
-    if (roleError) {
-      console.error("Error inserting into user_roles:", roleError.message);
-      return { error: "Failed to store user role", success: false, data: null };
-    }
-  
-    console.log("User role stored successfully.");
-  
-    return { error: null, success: true, data: signupData };
-  }
-  
-  export async function login(formData: FormData): Promise<AuthResponse> {
-    const supabase = await createClient();
-  
-    const credentials = {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-    };
-  
-    // ✅ Authenticate user
-    const { data: signInData, error: authError } = await supabase.auth.signInWithPassword(credentials);
-  
-    if (authError || !signInData?.user) {
-      return {
-        error: authError?.message || "Authentication failed!",
-        success: false,
-        data: null,
-      };
-    }
-  
-    const userId = signInData.user.id;
-  
-    // ✅ Fetch user role from `user_roles`
-    const { data: userRoleData, error: roleError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .single();
-  
-    if (roleError || !userRoleData) {
-      return {
-        error: "User role not found!",
-        success: false,
-        data: null,
-      };
-    }
-  
+  if (checkError) {
     return {
-      success: true,
-      data: { userId, role: userRoleData.role },
-      error: null,
+      error: "Database error while checking email!",
+      success: false,
+      data: null,
     };
   }
-  
-  
+
+  if (existingUser) {
+    return {
+      error: "Email is already registered!",
+      success: false,
+      data: null,
+    };
+  }
+
+  // Sign up user in Supabase Auth
+  const { data: signupData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: `${firstName} ${lastName}` } },
+  });
+
+  if (authError) {
+    return { error: authError.message, success: false, data: null };
+  }
+
+  const userId = signupData?.user?.id;
+  if (!userId) {
+    return { error: "User ID not found!", success: false, data: null };
+  }
+
+  console.log("User created in auth, inserting into user_profiles...");
+
+  // Insert user details in `user_profiles`
+  const { error: profileError } = await supabase.from("user_profiles").insert([
+    {
+      user_id: userId,
+      first_name: firstName,
+      last_name: lastName,
+      phone,
+      farm_name: userType === "farmer" ? farmName : null,
+      company_name: userType === "supplier" ? companyName : null,
+      address,
+      email,
+    },
+  ]);
+
+  if (profileError) {
+    console.error("Error inserting into user_profiles:", profileError.message);
+    return {
+      error: "Failed to store user profile",
+      success: false,
+      data: null,
+    };
+  }
+
+  console.log("User profile stored successfully, inserting into user_roles...");
+
+  // Insert user role in `user_roles`
+  const { error: roleError } = await supabase
+    .from("user_roles")
+    .insert([{ user_id: userId, role: userType }]);
+
+  if (roleError) {
+    console.error("Error inserting into user_roles:", roleError.message);
+    return { error: "Failed to store user role", success: false, data: null };
+  }
+
+  console.log("User role stored successfully.");
+
+  return { error: null, success: true, data: signupData };
+}
+
+export async function login(formData: FormData): Promise<AuthResponse> {
+  const supabase = await createClient();
+
+  const credentials = {
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
+  };
+
+  // ✅ Authenticate user
+  const { data: signInData, error: authError } =
+    await supabase.auth.signInWithPassword(credentials);
+
+  if (authError || !signInData?.user) {
+    return {
+      error: authError?.message || "Authentication failed!",
+      success: false,
+      data: null,
+    };
+  }
+
+  const userId = signInData.user.id;
+
+  // ✅ Check status from user_profile
+  const { data: userProfile, error: profileError } = await supabase
+    .from("user_profiles")
+    .select("status")
+    .eq("user_id", userId)
+    .single();
+
+  if (profileError || !userProfile) {
+    return {
+      error: "Unable to verify user profile.",
+      success: false,
+      data: null,
+    };
+  }
+
+  if (userProfile.status === "rejected") {
+    await supabase.auth.signOut();
+      return {
+      error: "Admins restrict you.",
+      success: false,
+      data: null,
+    };
+  }
+
+  if (userProfile.status !== "approved") {
+    await supabase.auth.signOut();
+    return {
+      error: "Your account is not yet approved.",
+      success: false,
+      data: null,
+    };
+  }
+
+  // ✅ Fetch user role from `user_roles`
+  const { data: userRoleData, error: roleError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .single();
+
+  if (roleError || !userRoleData) {
+    return {
+      error: "User role not found!",
+      success: false,
+      data: null,
+    };
+  }
+
+  return {
+    success: true,
+    data: { userId, role: userRoleData.role },
+    error: null,
+  };
+}
 
 export async function logout(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect('/login')
+  redirect("/login");
 }
 
 export async function getUserRole(): Promise<string | null> {
@@ -200,7 +244,9 @@ export async function getCurrentUser(): Promise<User | null> {
   // ✅ Fetch user details from `user_profiles`
   const { data: userProfile, error: profileError } = await supabase
     .from("user_profiles")
-    .select("user_id, first_name, last_name, email, phone, farm_name, company_name, address, created_at")
+    .select(
+      "user_id, first_name, last_name, email, phone, farm_name, company_name, address, created_at"
+    )
     .eq("user_id", userId)
     .single();
 
@@ -212,34 +258,51 @@ export async function getCurrentUser(): Promise<User | null> {
   return userProfile;
 }
 
-
 export async function getAllUsers(): Promise<User[] | null> {
   const supabase = await createClient();
 
   // Fetch users along with their roles
   const { data, error } = await supabase
     .from("user_profiles")
-    .select("user_id, first_name, last_name, email, phone, farm_name, company_name, address, created_at");
+    .select(
+      "user_id, first_name, last_name, email, phone, farm_name, company_name, address, created_at, status"
+    );
 
   if (error || !data) {
     console.error("Error fetching users:", error.message);
     return null;
-    }
-
-    return data;
   }
 
-
-  export async function getAllUserRoles() {
-       const supabase = await createClient();
-
-      const { data, error } = await supabase.from("user_roles").select("user_id, role");
-  
-      if (error) {
-        console.error("Error fetching user roles:", error);
-        return [];
-      }
-  
-      return data; // Array of { user_id, role }
+  return data;
 }
-  
+
+export async function getAllUserRoles() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("user_id, role");
+
+  if (error) {
+    console.error("Error fetching user roles:", error);
+    return [];
+  }
+
+  return data; // Array of { user_id, role }
+}
+
+export async function updateUserStatus(userId: string, newStatus: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("user_profiles")
+    .update({ status: newStatus })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Failed to update user status:", error.message);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}

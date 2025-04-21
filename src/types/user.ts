@@ -12,4 +12,5 @@ export interface User {
   company_name?: string;
   created_at?: string;
   bio?: string;
+  status?: string;
 } 

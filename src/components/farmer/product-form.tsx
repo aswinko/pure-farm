@@ -1,46 +1,65 @@
-"use client";
+"use client"
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { uploadProductImage, addProduct, getAllCategories } from "@/app/actions/product-actions";
+import {
+  uploadProductImage,
+  addProduct,
+  updateProductDetails,
+  getAllCategories,
+} from "@/app/actions/product-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Product } from "@/types/product";
+import Image from "next/image";
 
-// ✅ Define validation schema
 const productSchema = z.object({
   name: z.string().min(3, "Product name must be at least 3 characters"),
   price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price"),
-  description: z.string().min(15, "Description must be at least 15  characters"),
-  categoryId: z.string().min(1, "Please select a category"), // 🔹 Category validation
-  features: z.array(z.string().min(2, "Each feature must have at least 2 characters.")).min(1, "At least one feature is required."),
+  description: z.string().min(15, "Description must be at least 15 characters"),
+  categoryId: z.string().min(1, "Please select a category"),
+  features: z
+    .array(z.string().min(2, "Each feature must have at least 2 characters."))
+    .min(1, "At least one feature is required."),
   quantity: z
-  .string()
-  .regex(/^\d+$/, "Quantity must be a valid number")
-  .transform((val) => parseInt(val, 10)), // Convert string to number
-  image: z
-    .any()
-    .refine((files) => files?.length === 1, "Please upload an image")
+    .string()
+    .regex(/^\d+$/, "Quantity must be a valid number")
+    .transform((val) => parseInt(val, 10)),
+  image: z.any().optional(),
 });
 
-interface AddProductFormProps {
-  onProductAdded: () => void;
+interface ProductFormProps {
+  onProductAdded?: () => void;
+  onSubmitComplete?: () => void;
+  defaultValues?: Partial<Product>;
+  mode?: "add" | "edit"; // <-- Add this line
 }
 
-export default function AddProductForm({ onProductAdded }: AddProductFormProps) {
+
+export default function AddProductForm({
+  onProductAdded,
+  onSubmitComplete,
+  defaultValues,
+  mode
+}: ProductFormProps) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-  const [ , setCategoryLoading] = useState(true);
   const [features, setFeatures] = useState<string[]>([]);
   const [featureInput, setFeatureInput] = useState("");
-
 
   const {
     register,
@@ -50,49 +69,52 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
     formState: { errors },
   } = useForm({
     resolver: zodResolver(productSchema),
-    defaultValues: { features: [] }, // ✅ Ensure features field is initialized
+    defaultValues: {
+      name: defaultValues?.name || "",
+      price: defaultValues?.price?.toString() || "",
+      description: defaultValues?.description || "",
+      categoryId: defaultValues?.category_id || "",
+      quantity: defaultValues?.quantity ? Number(defaultValues.quantity) : 0,
+      features: defaultValues?.features || [],
+    },
   });
 
+  useEffect(() => {
+    setFeatures(defaultValues?.features || []);
+    setValue("features", defaultValues?.features || []);
+  }, [defaultValues]);
 
-  // ✅ Fetch categories on mount from getAllCategories()
   useEffect(() => {
     async function fetchCategories() {
-      setCategoryLoading(true);
       try {
         const data = await getAllCategories();
         setCategories(data);
       } catch (error) {
         console.log(error);
-        
         toast.error("Failed to fetch categories.");
-      } finally {
-        setCategoryLoading(false);
       }
     }
     fetchCategories();
   }, []);
 
-
   const handleAddFeature = () => {
     if (featureInput.trim().length > 1) {
       const updatedFeatures = [...features, featureInput.trim()];
       setFeatures(updatedFeatures);
-      setValue("features", updatedFeatures); // ✅ Sync with react-hook-form
+      setValue("features", updatedFeatures);
       setFeatureInput("");
     }
   };
-  
+
   const handleRemoveFeature = (index: number) => {
     const updatedFeatures = features.filter((_, i) => i !== index);
     setFeatures(updatedFeatures);
-    setValue("features", updatedFeatures); // ✅ Sync with react-hook-form
+    setValue("features", updatedFeatures);
   };
 
-  // 🔹 Handle form submission
   async function onSubmit(data: z.infer<typeof productSchema>) {
     setLoading(true);
 
-    // ✅ Get current user
     const { data: user, error: userError } = await supabase.auth.getUser();
     if (userError || !user?.user) {
       toast.error("User not authenticated!");
@@ -100,40 +122,60 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
       return;
     }
 
-    let imageUrl = null;
+    let imageUrl = defaultValues?.image || null;
     const file = data.image?.[0];
 
-    // ✅ Upload image to Supabase Storage
-    if (file) {
-      const { success, error, imageUrl: uploadedImageUrl } = await uploadProductImage(file);
+    if (file && file instanceof File) {
+      const { success, error, imageUrl: uploadedImageUrl } =
+        await uploadProductImage(file);
       if (!success) {
-        console.log(error);
-        
         toast.error(error || "Image upload failed");
         setLoading(false);
         return;
       }
-      imageUrl = uploadedImageUrl;
+      imageUrl = uploadedImageUrl || null;
     }
 
-    // ✅ Insert product into database
-    const { success, error } = await addProduct({
-      user_id: user.user.id,
-      name: data.name,
-      price: parseFloat(data.price),
-      description: data.description,
-      category_id: data.categoryId, // 🔹 Include selected category
-      quantity: data.quantity, // ✅ Include quantity
-      features,
-      image: imageUrl || undefined,
-    });
-
-    if (!success) {
-      toast.error(error || "Failed to add product");
+    if (mode === "edit") {
+      console.log("edit");
+      
+      const { success, error } = await updateProductDetails({
+        id: defaultValues?.id || "",
+        name: data.name,
+        price: parseFloat(data.price),
+        description: data.description,
+        category_id: data.categoryId,
+        quantity: data.quantity,
+        features,
+        image: imageUrl || defaultValues?.image,
+      });
+    
+      if (!success && error) {
+        toast.error(error || "Failed to update product");
+      } else {
+        toast.success("Product updated successfully!");
+        onSubmitComplete?.();
+      }
+    
     } else {
-      toast.success("Product added successfully!");
-      reset();
-      onProductAdded();
+      const { success, error } = await addProduct({
+        user_id: user.user.id,
+        name: data.name,
+        price: parseFloat(data.price),
+        description: data.description,
+        category_id: data.categoryId,
+        quantity: data.quantity,
+        features,
+        image: imageUrl || undefined,
+      });
+    
+      if (!success) {
+        toast.error(error || "Failed to add product");
+      } else {
+        toast.success("Product added successfully!");
+        reset();
+        onProductAdded?.();
+      }
     }
 
     setLoading(false);
@@ -141,8 +183,10 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
 
   return (
     <div className="mx-auto max-w-sm w-full">
-      <form onSubmit={handleSubmit(onSubmit)} className="border p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-semibold mb-4">Add a Product</h2>
+      <form onSubmit={handleSubmit(onSubmit)} className="border p-6 rounded-lg">
+      <h2 className="text-xl font-semibold mb-4">
+        {mode === "edit" ? "Edit Product" : "Add a Product"}
+      </h2>
 
         <div className="mb-4">
           <Label>Name</Label>
@@ -159,12 +203,17 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
         <div className="mb-4">
           <Label>Description</Label>
           <Textarea {...register("description")} />
-          {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+          {errors.description && (
+            <p className="text-red-500 text-sm">{errors.description.message}</p>
+          )}
         </div>
-        {/* ✅ Category Selection */}
+
         <div className="mb-4">
           <Label>Category</Label>
-          <Select onValueChange={(value) => setValue("categoryId", value)}>
+          <Select
+            defaultValue={defaultValues?.category_id}
+            onValueChange={(value) => setValue("categoryId", value)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
@@ -176,48 +225,78 @@ export default function AddProductForm({ onProductAdded }: AddProductFormProps) 
               ))}
             </SelectContent>
           </Select>
-          {errors.categoryId && <p className="text-red-500 text-sm">{errors.categoryId.message}</p>}
+          {errors.categoryId && (
+            <p className="text-red-500 text-sm">{errors.categoryId.message}</p>
+          )}
         </div>
-        
-        {/* Event Features */}
-        <div className="mb-4">
-            <Label>Event Highlights</Label>
-            <div className="flex gap-2">
-              <Input value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} placeholder="Add a feature" />
-              <Button type="button" onClick={handleAddFeature}>
-                Add
-              </Button>
-            </div>
-            {features.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {features.map((feature, index) => (
-                  <li key={index} className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                    {feature}
-                    <Button variant="ghost" size="sm" onClick={() => handleRemoveFeature(index)}>
-                      ✕
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {errors.features && <p className="text-red-500 text-sm">{errors.features.message as string}</p>}
-          </div>
 
-         {/* ✅ Quantity Input */}
-         <div className="mb-4">
+        <div className="mb-4">
+          <Label>Highlights</Label>
+          <div className="flex gap-2">
+            <Input
+              value={featureInput}
+              onChange={(e) => setFeatureInput(e.target.value)}
+              placeholder="Add a feature"
+            />
+            <Button type="button" onClick={handleAddFeature}>
+              Add
+            </Button>
+          </div>
+          {features.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {features.map((feature, index) => (
+                <li
+                  key={index}
+                  className="flex justify-between text-sm text-gray-700"
+                >
+                  {feature}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveFeature(index)}
+                  >
+                    ✕
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {errors.features && (
+            <p className="text-red-500 text-sm">
+              {errors.features.message as string}
+            </p>
+          )}
+        </div>
+
+        <div className="mb-4">
           <Label>Quantity</Label>
           <Input type="number" min="0" {...register("quantity")} />
-          {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
+          {errors.quantity && (
+            <p className="text-red-500 text-sm">{errors.quantity.message}</p>
+          )}
         </div>
 
         <div className="mb-4">
           <Label>Image</Label>
+          {defaultValues?.image && (
+            <div className="mb-2">
+              <Image
+                width={100}
+                height={100}
+                src={defaultValues.image}
+                alt="Current Product"
+                className="rounded-md w-full h-auto max-h-40 object-contain border"
+              />
+            </div>
+          )}
           <Input type="file" accept="image/*" {...register("image")} />
-          {errors.image && <p className="text-red-500 text-sm">{errors.image.message as string}</p>}
+          {errors.image && (
+            <p className="text-red-500 text-sm">{errors.image.message as string}</p>
+          )}
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Adding..." : "Add Product"}
+          {loading ? (mode === "edit" ? "Updating..." : "Adding...") : (mode === "edit" ? "Update Product" : "Add Product")}
         </Button>
       </form>
     </div>

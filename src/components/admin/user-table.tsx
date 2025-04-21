@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import {useEffect, useState} from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,19 +13,25 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { ArrowUpDown, MoreHorizontal } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-// import {
-//   DropdownMenu,
-//   DropdownMenuCheckboxItem,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -35,9 +41,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getAllUserRoles, getAllUsers } from "@/app/actions/auth-actions"
+import { getAllUserRoles, getAllUsers, updateUserStatus } from "@/app/actions/auth-actions"
+import { Label } from "../ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { toast } from "sonner"
 
 export type User = {
+  user_id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -47,7 +57,86 @@ export type User = {
   company_name: string;
   address: string;
   role: string;
+  status?: string;
 };
+
+const UserActions = ({ row }: { row: { original: User } }) => {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [newStatus, setNewStatus] = useState(row.original.status ?? '')
+
+  const handleUpdateStatus = async () => {
+    // TODO: Call your Supabase update function here
+    const userId = row.original.user_id;
+    setLoading(true)
+
+    try {
+      const res = await updateUserStatus(userId, newStatus)
+  
+      if (res.success) {
+        toast.success("User status updated successfully")
+      } else {
+        toast.error(res.error || "Failed to update status")
+      }
+  
+      setOpen(false)
+    } catch (error) {
+      console.error(error)
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem
+            onClick={() => navigator.clipboard.writeText(row?.original?.user_id)}
+          >
+            Copy User ID
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setOpen(true)}>Edit User status</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User Status</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Label htmlFor="status">Status</Label>
+            <Select defaultValue={newStatus} onValueChange={(value) => setNewStatus(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="approved">Approved</SelectItem>
+                {/* <SelectItem value="pending">Pending</SelectItem> */}
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateStatus} disabled={loading}>
+              {loading ? "Updating..." : "Update Status"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -109,49 +198,32 @@ export const columns: ColumnDef<User>[] = [
     header: () => <div className="">Role</div>,
     cell: ({ row }) => <div>{row.original.role}</div>,
   },
-  // {
-  //   id: "actions",
-  //   enableHiding: false,
-  //   cell: ({ row }) => {
-  //     const payment = row.original
-
-  //     return (
-  //       <DropdownMenu>
-  //         <DropdownMenuTrigger asChild>
-  //           <Button variant="ghost" className="h-8 w-8 p-0">
-  //             <span className="sr-only">Open menu</span>
-  //             <MoreHorizontal />
-  //           </Button>
-  //         </DropdownMenuTrigger>
-  //         <DropdownMenuContent align="end">
-  //           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-  //           <DropdownMenuItem
-  //             onClick={() => navigator.clipboard.writeText(payment.id)}
-  //           >
-  //             Copy payment ID
-  //           </DropdownMenuItem>
-  //           <DropdownMenuSeparator />
-  //           <DropdownMenuItem>View customer</DropdownMenuItem>
-  //           <DropdownMenuItem>View payment details</DropdownMenuItem>
-  //         </DropdownMenuContent>
-  //       </DropdownMenu>
-  //     )
-  //   },
-  // },
+  {
+    accessorKey: "status",
+    header: () => <div className="">Status</div>,
+    cell: ({ row }) => <div className={`${row.original.status === "rejected" ? "text-red-600" : "text-green-500" }`}>{row.original.status}</div>,
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => <UserActions row={row} />,
+  },
 ]
 
 export function UserTable() {
-  const [users, setUsers] = React.useState<User[]>([]);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [users, setUsers] = useState<User[]>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchUsersAndRoles() {
       const usersData = await getAllUsers();
       const rolesData = await getAllUserRoles();
       console.log(rolesData);
+      console.log(usersData);
+      
       
   
       // Merge users with their roles
@@ -233,6 +305,35 @@ export function UserTable() {
             )}
           </TableBody>
         </Table>
+        <div className="flex items-center justify-between p-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
+            {Math.min(
+              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+              table.getFilteredRowModel().rows.length
+            )}{" "}
+            of {table.getFilteredRowModel().rows.length} results
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+
       </div>
     </div>
   );

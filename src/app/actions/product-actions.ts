@@ -216,3 +216,27 @@ export async function getAllProductsExceptCurrentUser(userId: string) {
 
   return data;
 }
+
+export async function updateProductDetails(updatedProduct: Partial<Product> & { id: string }) {
+  const supabase = await createClient()  
+
+  const { error } = await supabase
+    .from("products")
+    .update({
+      name: updatedProduct.name,
+      price: updatedProduct.price,
+      quantity: updatedProduct.quantity,
+      description: updatedProduct.description,
+      category_id: updatedProduct.category_id,
+      features: updatedProduct.features,
+      image: updatedProduct.image,
+    })
+    .eq("id", updatedProduct.id)
+
+  if (error) {
+    console.error("Update error:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
