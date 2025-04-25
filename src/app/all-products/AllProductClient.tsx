@@ -237,7 +237,7 @@ export default function AllProductClient({ products, categories }: AllProductCli
                 </CardContent>
                 <CardFooter className="p-4 pt-0 flex justify-between items-center">
                   <div>
-                    <p className="font-bold">${product.price.toFixed(2)}</p>
+                    <p className="font-bold">₹{product.price.toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground">per {product.quantity}</p>
                   </div>
                   <Button size="sm" variant="secondary">

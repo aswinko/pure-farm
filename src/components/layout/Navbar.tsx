@@ -26,7 +26,7 @@ export default async function Navbar() {
           </div>
         </nav> */}
         <div className="flex items-center gap-4">
-          <div className="flex gap-8">
+          <div className="hidden md:flex gap-8 ">
             <Link
               href="/"
               className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"

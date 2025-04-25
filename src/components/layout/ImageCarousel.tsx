@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/carousel"
 import Image from "next/image"
 
-const imageData = ["/img-slider1.png", "/img-slider2.png", "/img-slider3.png", "/img-slider4.png"];
+const imageData = ["/banner1.jpg", "/banner2.jpg", "/banner3.jpg", "/img-slider1.png"];
 
 export function ImageCarousel() {
   const plugin = React.useRef(
@@ -31,7 +31,7 @@ export function ImageCarousel() {
         {imageData.map((data, index) => (
           <CarouselItem key={index}>
             <div className="p-1">
-            <Card className="relative w-full h-[500px] rounded-xl overflow-hidden">
+            <Card className="relative w-full h-[80vh] rounded-xl overflow-hidden">
             <CardContent className="w-full h-full p-0 items-center justify-center px-6 ">
                   {/* <span className="text-4xl font-semibold">{index + 1}</span> */}
                   <Image fill src={data} alt={`Slide ${index + 1}`} className="object-cover w-full h-full"/>

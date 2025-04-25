@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 
 
 interface ProductSliderProps {
@@ -27,7 +28,7 @@ export const ProductSlider: React.FC<ProductSliderProps> = ({products}) => {
           <Link href={`product/${product.id}`} >
             <div className="p-1">
               <Card className="rounded-lg overflow-hidden shadow-lg">
-                <CardContent className="flex flex-col items-center justify-center p-4">
+                <CardContent className="flex flex-col items-center justify-center px-1">
                   {/* Product Image */}
                   <div className="relative w-full h-32 mb-2">
                     <Image
@@ -42,8 +43,9 @@ export const ProductSlider: React.FC<ProductSliderProps> = ({products}) => {
                   {/* Price */}
                   <p className="text-sm text-gray-600 mt-1">₹{product.price}</p>
                   {/* Add to Cart Button */}
-                  <Button variant="default" className="mt-3 w-full">
-                    Add to Cart
+                  <Button variant="outline" className="mt-3 w-full px-4">
+                    Add to Cart 
+                    <ShoppingCart className="w-6 h-6 p-0" />
                   </Button>
                 </CardContent>
               </Card>

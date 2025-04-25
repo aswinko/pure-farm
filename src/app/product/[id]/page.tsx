@@ -1,6 +1,7 @@
 import { getCategoryById, getProductById, getRelatedProducts } from "@/app/actions/product-actions"
 import ProductDetailClient from "./ProductDetailClient";
 import Navbar from "@/components/layout/Navbar";
+import { createClient } from "@/lib/supabase/server";
 
 interface Params {
   params: { id: string };
@@ -9,6 +10,10 @@ interface Params {
 export default async function EventDetailPage({ params }: Params) {
 
   const id = (await params).id;
+
+  const supabase =  await createClient()
+  const {data: {user}} = await supabase.auth.getUser()
+
 
   if (!id) return <div>Not found</div>;
 
@@ -35,7 +40,7 @@ export default async function EventDetailPage({ params }: Params) {
   return (
     <>
     <Navbar />
-    <ProductDetailClient product={product || null} relatedProducts={relatedProducts} />;
+    <ProductDetailClient user={user} product={product || null} relatedProducts={relatedProducts} />;
     </>
   )
 }

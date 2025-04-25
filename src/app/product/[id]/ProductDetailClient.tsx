@@ -16,9 +16,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { useCart } from "@/context/cart-context"
 import { DateRange } from "react-day-picker"
+import { User } from "@supabase/auth-js"
 
 
-export default function ProductDetailClient({product, relatedProducts}: {product: Product, relatedProducts: {relatedProducts: Product[]}}) {
+export default function ProductDetailClient({product, relatedProducts, user}: {product: Product, user: User | null, relatedProducts: {relatedProducts: Product[]}}) {
   const toastId = useId()
 
   const [quantity, setQuantity] = useState(1)
@@ -202,10 +203,19 @@ export default function ProductDetailClient({product, relatedProducts}: {product
             )}
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button className="flex-1" size="lg" onClick={addToCart} disabled={!dateRange.from || !dateRange.to && loading}>
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Add Subscription to Cart
-              </Button>
+              {
+                user ? (
+                  <Button className="flex-1" size="lg" onClick={addToCart} disabled={!dateRange.from || !dateRange.to && loading}>
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  Add Subscription to Cart
+                </Button>
+                ) : (
+                  <Link className="flex-1 bg-primary text-white flex justify-center items-center rounded-sm py-2" href={"/login"}>
+                    You need to sign in first  , Click Here                  
+                </Link>
+                )
+              }
+
             </div>
 
           <Separator />
