@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { getOrderDetailsByOrderIdAndProductId } from "@/app/actions/order-actions"
 import { useEffect, useState } from "react"
 import { SubscriptionCard } from "@/components/layout/SubscriptionCard"
+import { useRouter } from "next/navigation"
 
 
 type Order = {
@@ -36,6 +37,7 @@ type Order = {
   }
 
 export default function OrderDetailsPage() {
+    const router = useRouter()
     const searchParams = useSearchParams()
     const orderId = searchParams.get("order_id")
     const productId = searchParams.get("product_id")
@@ -66,7 +68,7 @@ export default function OrderDetailsPage() {
       <div className="flex flex-col space-y-8">
         <div className="flex items-center">
           <Link href="/orders">
-            <Button variant="ghost" size="sm" className="gap-1">
+            <Button onClick={() => router.back() } variant="ghost" size="sm" className="gap-1">
               <ArrowLeft className="h-4 w-4" />
               Back to Orders
             </Button>

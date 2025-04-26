@@ -58,10 +58,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Link>
           <div className="ml-auto flex items-center gap-2">
 
-            <Button variant="outline" size="icon">
+            {/* <Button variant="outline" size="icon">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Toggle notifications</span>
-            </Button>
+            </Button> */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1">
@@ -73,10 +73,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                {/* <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
                   Profile
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings

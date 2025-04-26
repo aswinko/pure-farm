@@ -240,3 +240,36 @@ export async function updateProductDetails(updatedProduct: Partial<Product> & { 
 
   return { success: true }
 }
+
+
+export async function updateCategory(categoryId: string, categoryName: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("categories")
+    .update({ name: categoryName })
+    .eq("id", categoryId)
+
+  if (error) {
+    console.error("Update error:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function deleteCategory(categoryId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("id", categoryId)
+
+  if (error) {
+    console.error("Delete error:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}

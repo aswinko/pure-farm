@@ -93,7 +93,7 @@ export default function ProductDetailClient({product, relatedProducts, user}: {p
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Breadcrumb */}
       <div className="mb-6">
-        <Link href="#" className="flex items-center text-sm text-muted-foreground hover:text-primary">
+        <Link href="/all-products" className="flex items-center text-sm text-muted-foreground hover:text-primary">
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to Products
         </Link>

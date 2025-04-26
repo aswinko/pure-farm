@@ -44,7 +44,9 @@ export default function ProductList({ refresh }: { refresh: boolean }) {
   }
 
   async function fetchCategories() {
-    const { data, error } = await supabase.from("categories").select("id, name");
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name");
     if (error) {
       console.error("Error fetching categories:", error.message);
     } else {
@@ -115,7 +117,7 @@ export default function ProductList({ refresh }: { refresh: boolean }) {
             }}
           />
         </DialogContent>
-</Dialog>
+      </Dialog>
     </>
   );
 }

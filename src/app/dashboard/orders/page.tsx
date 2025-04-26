@@ -32,7 +32,7 @@ export default async function OrdersPage() {
     <div className="container mx-auto py-10 px-4">
       <div className="flex flex-col space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Orders</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Customer Orders</h1>
           <p className="text-muted-foreground">View and manage your subscription orders</p>
         </div>
 
