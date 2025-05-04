@@ -8,6 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Mail, Phone, MapPin, Send, CheckCircle } from "lucide-react"
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
+const containerStyle = {
+  width: "100%",
+  height: "100%",
+};
+
+const center = {
+  lat: 9.9312,  // Kochi Latitude
+  lng: 76.2673, // Kochi Longitude
+};
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false)
@@ -119,7 +130,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">+91 </p>
+                      <p className="font-medium">+91 8590879173</p>
                     </div>
                   </div>
 
@@ -170,7 +181,7 @@ export default function ContactPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-full border-gray-700 text-white hover:bg-gray-800"
+                    className="rounded-full border-gray-700 text-black hover:bg-gray-800"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +197,7 @@ export default function ContactPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-full border-gray-700 text-white hover:bg-gray-800"
+                    className="rounded-full border-gray-700 text-black hover:bg-gray-800"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -202,7 +213,7 @@ export default function ContactPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-full border-gray-700 text-white hover:bg-gray-800"
+                    className="rounded-full border-gray-700 text-black hover:bg-gray-800"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -228,11 +239,17 @@ export default function ContactPage() {
           transition={{ delay: 0.6, duration: 0.5 }}
           className="mb-16"
         >
-          <Card className="border-none shadow-md overflow-hidden">
-            <div className="h-80 bg-gray-200 flex items-center justify-center">
-              <p className="text-gray-500">Map placeholder</p>
-            </div>
-          </Card>
+            <Card className="border-none shadow-md overflow-hidden rounded-2xl h-80">
+              <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}>
+                <GoogleMap
+                  mapContainerStyle={containerStyle}
+                  center={center}
+                  zoom={12}
+                >
+                  <Marker position={center} />
+                </GoogleMap>
+              </LoadScript>
+            </Card>
         </motion.div>
       </div>
     </div>

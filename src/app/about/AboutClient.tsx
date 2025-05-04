@@ -10,6 +10,7 @@ import {
   Award,
   Clock,
 } from "lucide-react"
+import Image from "next/image"
 
 const lucideIcons = {
   Users,
@@ -119,8 +120,11 @@ export default function AboutPage() {
               </Button>
             </div>
             <div className="bg-gray-200 rounded-lg aspect-video flex items-center justify-center">
-              <p className="text-gray-500 text-sm">Farm photo / infographic</p>
+              <div className="flex flex-col items-center text-gray-500 text-sm">
+                <img src="/banner2.jpg" alt="Farm" className="w-full h-full mb-2 object-cover aspect-video" />
+              </div>
             </div>
+
           </div>
         </motion.section>
 
