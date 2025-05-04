@@ -16,7 +16,7 @@ interface Category {
   name: string;
 }
 
-export default function ProductList({ refresh }: { refresh: boolean }) {
+export default function ProductList({ refresh, role }: { refresh: boolean; role: string }) {
   const supabase = createClient();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ [key: string]: string }>({});
@@ -30,17 +30,33 @@ export default function ProductList({ refresh }: { refresh: boolean }) {
 
   async function fetchProducts() {
     const user = await getCurrentUser();
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("user_id", user?.user_id)
-      .order("created_at", { ascending: false });
+    if (role === "farmer") {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", user?.user_id)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching products:", error.message);
-    } else {
-      setProducts(data || []);
+        if (error) {
+          console.error("Error fetching products:", error.message);
+        } else {
+          setProducts(data || []);
+        }
+    }else {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching products:", error.message);
+        } else {
+          setProducts(data || []);
+        }
     }
+
+    console.log("Products:", products);
+    
   }
 
   async function fetchCategories() {
@@ -63,6 +79,8 @@ export default function ProductList({ refresh }: { refresh: boolean }) {
     setOpen(true);
   };
 
+  
+
   return (
     <>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mx-12">
@@ -71,13 +89,18 @@ export default function ProductList({ refresh }: { refresh: boolean }) {
             <Card key={product.id} className="shadow-md">
               <CardHeader className="flex justify-between items-start">
                 <CardTitle className="text-xl">{product.name}</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(product)}
-                >
-                  <Edit2 className="text-black w-5 h-5" />
-                </Button>
+                {
+                  role === "farmer" && (
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(product)}
+                    >
+                    <Edit2 className="text-black w-5 h-5" />
+                    </Button>
+                  )
+                }
+                
               </CardHeader>
               <CardContent>
                 {product.image && (
