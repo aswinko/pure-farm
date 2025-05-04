@@ -306,3 +306,35 @@ export async function updateUserStatus(userId: string, newStatus: string) {
 
   return { success: true };
 }
+
+
+export async function updateUserProfile(
+  userId: string,
+  formData: FormData
+): Promise<AuthResponse> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("user_profiles")
+    .update({
+      first_name: formData.get("first_name"),
+      last_name: formData.get("last_name"),
+      phone: formData.get("phone"),
+      address: formData.get("address"),
+    })
+    .eq("user_id", userId);
+
+  if (error) {
+    return {
+      error: error.message,
+      success: false,
+      data: null,
+    };
+  }
+
+  return {
+    error: null,
+    success: true,
+    data: null,
+  };
+}

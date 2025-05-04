@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,11 +8,67 @@ import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
 import { Edit, MapPin, Mail, Phone, Calendar, Shield, Award, ChevronRight } from 'lucide-react'
 import { User } from "@/types/user"
+import { getCurrentUser, updateUserProfile } from "../actions/auth-actions"
+import { toast } from "sonner"
+import ProfileEditDialog from "@/components/layout/ProfileEditDialog"
+export interface UserProfile {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  avatar_url?: string;
+  address?: string;
+  created_at: string;
+}
 
 export default function ProfilePage({user}: {user: User}) {
   const [isHovering, setIsHovering] = useState(false)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+  useEffect(() => {
+    setProfile(user as UserProfile)
+  }, [user])
+  
+
+  const handleProfileUpdate = async (updatedProfile: UserProfile) => {
+    try {
+      const user = await getCurrentUser();
+  
+      
+      if (!user || !user.user_id) {
+        toast.error("User not found");
+        return;
+      }
+  
+      const formData = new FormData();
+      formData.append("first_name", updatedProfile.first_name || "");
+      formData.append("last_name", updatedProfile.last_name || "");
+      formData.append("phone", updatedProfile.phone || "");
+      formData.append("address", updatedProfile.address || "");
+  
+      const {error} = await updateUserProfile(user?.user_id ?? "", formData);
+      
+      if (error) {
+        console.log(error);
+        
+        toast.error("Could not update your profile");
+        return;
+      }
+      setProfile(updatedProfile);
+      toast.success("Your profile has been updated successfully");
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      toast.error("Could not update your profile");
+    }
+  };
+
+  console.log(profile);
+  
+  
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
 
@@ -68,7 +124,7 @@ export default function ProfilePage({user}: {user: User}) {
                     )}
                   </motion.div>
 
-                  <h2 className="text-2xl font-bold mt-4">{user.first_name + user.last_name}</h2>
+                  <h2 className="text-2xl font-bold mt-4">{profile?.first_name + " " + profile?.last_name ?? ""}</h2>
                   {/* <p className="text-gray-500">{}</p> */}
 
                   <div className="flex gap-2 mt-3">
@@ -80,7 +136,7 @@ export default function ProfilePage({user}: {user: User}) {
                     </Badge>
                   </div>
 
-                  <Button className="w-full mt-6 bg-gray-900 hover:bg-black text-white">
+                  <Button className="w-full mt-6 bg-gray-900 hover:bg-black text-white" onClick={() => setIsEditDialogOpen(true)}>
                     Edit Profile
                   </Button>
                 </div>
@@ -88,7 +144,7 @@ export default function ProfilePage({user}: {user: User}) {
             </Card>
           </motion.div>
 
-          {/* Right column - User details */}
+          {/* Right column - profile details */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -103,6 +159,7 @@ export default function ProfilePage({user}: {user: User}) {
                     variant="ghost"
                     size="sm"
                     className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    onClick={() => setIsEditDialogOpen(true)}
                   >
                     <Edit className="h-4 w-4 mr-2" /> Edit
                   </Button>
@@ -113,19 +170,19 @@ export default function ProfilePage({user}: {user: User}) {
                     <InfoItem
                       icon={<Mail className="h-5 w-5 text-gray-700" />}
                       label="Email Address"
-                      value={user.email}
+                      value={profile?.email ?? ""}
                     />
 
                     <InfoItem
                       icon={<Phone className="h-5 w-5 text-gray-700" />}
                       label="Phone Number"
-                      value={user.phone || ''}
+                      value={profile?.phone || ''}
                     />
 
                     <InfoItem
                       icon={<MapPin className="h-5 w-5 text-gray-700" />}
                       label="Location"
-                      value={user.address || ''}
+                      value={profile?.address || ''}
                     />
 
                     <InfoItem icon={<Calendar className="h-5 w-5 text-gray-700" />} label="Joined" value={new Date(user.created_at || '').toLocaleDateString("en-US", {
@@ -135,9 +192,9 @@ export default function ProfilePage({user}: {user: User}) {
                   </div>
 
                   <div className="pt-4 border-t border-gray-100">
-                    <h3 className="text-lg font-semibold mb-4">Bio</h3>
+                    <h3 className="text-lg font-semibold mb-4">Address</h3>
                     <p className="text-gray-600 leading-relaxed">
-                      {user?.bio || ""}
+                      {profile?.address || ""}
                     </p>
                   </div>
 
@@ -165,6 +222,10 @@ export default function ProfilePage({user}: {user: User}) {
         </div>
       </div>
     </div>
+    {isEditDialogOpen && profile && (
+      <ProfileEditDialog profile={profile} onClose={() => setIsEditDialogOpen(false)} onSave={handleProfileUpdate} />
+    )}
+    </>
   )
 }
 

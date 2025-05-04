@@ -1,5 +1,5 @@
 import React from 'react'
-import ProfilePage from './ProfileClient'
+import ProfilePage, { UserProfile } from './ProfileClient'
 import Navbar from '@/components/layout/Navbar'
 import { getCurrentUser } from '../actions/auth-actions'
 import { redirect } from 'next/navigation'
